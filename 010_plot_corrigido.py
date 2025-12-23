@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # ------------------------------------------------------------------
 # 1. Carregar pickle corrigido (com SERN)
 # ------------------------------------------------------------------
-with open("Metrics/Gaja/gaja_corrigido.pkl", "rb") as f:  # ou o nome exato do seu corrigido
+with open("Metrics/Gaja/gaja_corrigido.pkl", "rb") as f:  
     data = pickle.load(f)
 
 antes   = data['antes']
@@ -19,7 +19,7 @@ def vector_to_grid(values, ocean_mask):
     grid[ocean_mask] = values
     return grid
 
-ocean_mask = antes['ocean_mask']  # já é boolean 2D (41, 68)
+ocean_mask = antes['ocean_mask'] 
 
 # === USAR MÉTRICAS CORRIGIDAS (pós-SERN) ===
 deg_a   = vector_to_grid(np.log10(antes['degree_corr'] + 1), ocean_mask)
@@ -37,11 +37,11 @@ lat_centers = np.linspace(34.5, 4.5, 41)       # 34.5°N → 4.5°N (decrescente
 Lon_c, Lat_c = np.meshgrid(lon_centers, lat_centers, indexing='xy')
 
 # ------------------------------------------------------------------
-# 4. Plot FINAL (idêntico à Fig. 2 do Gupta)
+# 4. Plot
 # ------------------------------------------------------------------
 fig, axes = plt.subplots(2, 3, figsize=(19, 10.5), constrained_layout=True)
 
-fig.suptitle("Figura 2 – Gupta et al. (2021) reproduzida\nComplex network approach for detecting tropical cyclone Gaja",
+fig.suptitle("Figura 2 – Gupta et al. (2021) reproduzida\nCiclone Tropical Gaja (2018)",
              fontsize=17, fontweight='bold', y=0.98)
 
 metrics = [
