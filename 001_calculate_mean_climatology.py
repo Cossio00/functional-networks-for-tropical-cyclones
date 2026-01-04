@@ -11,9 +11,11 @@ from datetime import datetime
 # ================================
 # CONFIGURAÇÕES
 # ================================
-data_dir = "Dataset/Gaja/mslp"
-output_file = "Metrics/Gaja/mslp_climatology_1979_2018_daily.nc"
+region = "Bengal_Bay"
+cyclone = "Gaja"
 
+data_dir = f"Dataset/{region}/mslp"
+output_file = f"Metrics/{region}/mslp_climatology_1979_2018_daily.nc"
 file_list = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
 print(f"Encontrados {len(file_list)} arquivos.")
 
@@ -92,5 +94,5 @@ clim_da = xr.DataArray(
     }
 )
 
-clim_da.to_netcdf(output_file, encoding={'mslp_climatology': {'zlib': True, 'complevel': 5}})
+clim_da.to_netcdf(output_file)
 print(f"\nCLIMATOLOGIA SALVA: {output_file} (365 dias)")
