@@ -12,9 +12,12 @@ import pandas as pd
 # ================================
 # CONFIGURAÇÕES
 # ================================
-clim_path = "Metrics/Gaja/mslp_climatology_1979_2018_daily.nc"
-data_dir = "Dataset/Gaja/mslp"  # Pasta com arquivos MSLP 2018 (ou todos, mas filtraremos 2018)
-output_anomaly = "Metrics/Gaja/mslp_anomalies_oct_nov_2018.nc"
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
+
+clim_path = f"Metrics/{REGION}/mslp_climatology_1979_2018_daily.nc"
+data_dir = f"Dataset/{REGION}/mslp"  # Pasta com arquivos MSLP 2018 (ou todos, mas filtraremos 2018)
+output_anomaly = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018.nc"
 
 # Carregar climatologia
 clim = xr.open_dataarray(clim_path)
@@ -96,7 +99,7 @@ anomaly_da = anomaly_da.sortby('time')
 # ================================
 # 4. Salvar + VALIDAÇÃO
 # ================================
-anomaly_da.to_netcdf(output_anomaly, encoding={'mslp_anomaly': {'zlib': True}})
+anomaly_da.to_netcdf(output_anomaly)
 print(f"\nANOMALIAS SALVAS: {output_anomaly}")
 print(f"  Shape: {anomaly_da.shape}")
 print(f"  Período: {anomaly_da.time.min().values} → {anomaly_da.time.max().values}")
