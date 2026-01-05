@@ -1,9 +1,11 @@
 import xarray as xr
 
-#Cria as janelas de Gaja apresentadas por Gupta, sendo uma antes de Gaja e uma durante Gaja
+#Cria as janelas de Gaja apresentadas por Gupta, sendo uma antes do ciclone e uma durante
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
 
 print("Abrindo arquivo de anomalias com máscara oceânica...")
-anoms = xr.open_dataarray("Metrics/Gaja/mslp_anomalies_oct_nov_2018_ocean.nc")
+anoms = xr.open_dataarray(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018_ocean.nc")
 
 print(f"Total de timesteps no arquivo: {len(anoms.time)}")
 
@@ -27,13 +29,13 @@ time_encoding = {
 var_encoding = {anoms.name: {'zlib': True, 'complevel': 5}}
 
 janela_antes.to_netcdf(
-    "Metrics/Gaja/anomalias_janela_antes_gaja_2018.nc",
+    f"Metrics/{REGION}/{CYCLONE}/windows_before_{CYCLONE}.nc",
     encoding={**var_encoding, **time_encoding},
     engine='netcdf4'  
 )
 
 janela_durante.to_netcdf(
-    "Metrics/Gaja/anomalias_janela_durante_gaja_2018.nc",
+    f"Metrics/{REGION}/{CYCLONE}/windows_during_{CYCLONE}.nc",
     encoding={**var_encoding, **time_encoding},
     engine='netcdf4'
 )

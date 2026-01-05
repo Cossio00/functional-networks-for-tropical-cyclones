@@ -3,82 +3,77 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Falta ajustar o tamanho das figuras, posição dos títulos e subtítulos, correção de valores (após aplicar SERN) e 
-# tentar melohrar aplicação da máscara
-
-# ------------------------------------------------------------------
-# 1. Carregar pickle
-# ------------------------------------------------------------------
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "rb") as f:
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
+# Carrega o pickle com as métricas corrigidas
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
 
-antes   = data['antes']
+antes = data['antes']
 durante = data['durante']
 
-# ------------------------------------------------------------------
-# 2. Colocar valores só no oceano
-# ------------------------------------------------------------------
+# Função para reshape 1D → 2D (só pontos oceânicos)
 def vector_to_grid(values, ocean_mask):
-    grid = np.full(ocean_mask.shape, np.nan)  
+    grid = np.full(ocean_mask.shape, np.nan)
     grid[ocean_mask] = values
     return grid
 
-ocean_mask = antes['ocean_mask']  
+ocean_mask = antes['ocean_mask']
 
-deg_a   = vector_to_grid(np.log10(antes['degree'] + 1), ocean_mask)
-deg_d   = vector_to_grid(np.log10(durante['degree'] + 1), ocean_mask)
-dist_a  = vector_to_grid(antes['mean_dist'], ocean_mask)
-dist_d  = vector_to_grid(durante['mean_dist'], ocean_mask)
-clus_a  = vector_to_grid(antes['clustering'], ocean_mask)
-clus_d  = vector_to_grid(durante['clustering'], ocean_mask)
+# Métricas corrigidas
+deg_a   = vector_to_grid(antes['degree_corr'], ocean_mask)
+deg_d   = vector_to_grid(durante['degree_corr'], ocean_mask)
+dist_a  = vector_to_grid(antes['mean_dist_corr'], ocean_mask)
+dist_d  = vector_to_grid(durante['mean_dist_corr'], ocean_mask)
+clus_a  = vector_to_grid(antes['clustering_corr'], ocean_mask)
+clus_d  = vector_to_grid(durante['clustering_corr'], ocean_mask)
 
-# ------------------------------------------------------------------
-# 3. COORDENADAS CORRETAS 
-# ------------------------------------------------------------------
-
-lon_centers = np.linspace(49.5, 100.0, 68)                    # 49.5 → 100°E
-lat_centers = np.linspace(34.5, 4.5, 41)                      # 34.5 → 4.5°N (ordem decrescente)
+# COORDENADAS
+lon_centers = np.linspace(49.5, 100.0, 68)      # 49.5°E → 100°E
+lat_centers = np.linspace(34.5, 4.5, 41)        # 34.5°N → 4.5°N (decrescente como no ERA5)
 Lon_c, Lat_c = np.meshgrid(lon_centers, lat_centers, indexing='xy')
 
-# ------------------------------------------------------------------
-# 4. Plot FINAL
-# ------------------------------------------------------------------
-fig, axes = plt.subplots(2, 3, figsize=(19, 10.5), constrained_layout=True, 
-                         subplot_kw={'projection': None})  # sem projeção especial por enquanto
-
-fig.suptitle("Figura 2 – Gupta et al. (2021) reproduzida\nCiclone Tropical Gaja (2018)",
+# Plot
+fig, axes = plt.subplots(2, 3, figsize=(19, 10.5), constrained_layout=True)
+fig.suptitle(f"{CYCLONE}",
              fontsize=17, fontweight='bold', y=0.98)
 
 metrics = [
-    (deg_a,  deg_d,  "Degree (log$_{10}$(degree + 1))",          0.7,  2.1), #Corrigir essas métricas após a correção de bordas
-    (dist_a, dist_d, "Mean geographical distance (km)",         300,  1100),
-    (clus_a, clus_d, "Local clustering coefficient",           0.38, 0.96),
+    #("Degree (corrected)", deg_a, deg_d, 0.6, 1.8),
+    #("Degree (corrected)", deg_a, deg_d, 0.04, 2.72),
+    ("Degree (corrected)", deg_a, deg_d, 0.04, 2.45),
+    #("Mean geographical distance (corrected)", dist_a, dist_d, 0.7, 1.4),
+    #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.83),
+    ("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.67),
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 2.0),
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0, 2.75),
+    ("Local clustering coefficient (corrected)", clus_a, clus_d, 0.3, 2.1)
 ]
 
 periods = ["Antes do Gaja\n(29 out – 07 nov 2018)", "Durante o Gaja\n(10–19 nov 2018)"]
 letters = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
 
-for col, (f1, f2, title, vmin, vmax) in enumerate(metrics):
+for col, (title, f1, f2, vmin, vmax) in enumerate(metrics):
     for row, field in enumerate([f1, f2]):
         ax = axes[row, col]
         im = ax.pcolormesh(Lon_c, Lat_c, field,
-                           cmap='coolwarm', vmin=vmin, vmax=vmax, shading='auto')
+                           cmap='RdBu_r', vmin=vmin, vmax=vmax, shading='auto')
         
-        #ax.set_xlim(49.5, 100)      # domínio real
-        #ax.set_ylim(4.5, 34.5)      # domínio real     Verificar o motivo das coordenadas se desajustarem aqui
+        ax.set_xlim(49.5, 100.0)    # domínio real
+        ax.set_ylim(4.5, 34.5)     # domínio real (ajusta visualmente)
         ax.set_xlabel("Longitude (°E)", fontsize=11)
         if col == 0:
             ax.set_ylabel("Latitude (°N)", fontsize=11)
         
         ax.set_title(f"{letters[row*3 + col]} {title}\n{periods[row]}",
-                     fontsize=12, pad=12)
+                     fontsize=12, pad=15)
         
         cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.02)
         cbar.set_label(title.split("(")[0].strip(), fontsize=10)
 
+# Terra em cinza
 for ax in axes.flat:
-    ax.set_facecolor('gray')  # opcional: cor para terra
-    
+    ax.set_facecolor('gray')
 
-plt.savefig("Plots/FIGURA_GAJA.png", dpi=600, bbox_inches='tight', facecolor='white')
+plt.savefig(f"Plots/{REGION}/Plot_{CYCLONE}.png", dpi=600, bbox_inches='tight', facecolor='white')
 plt.show()

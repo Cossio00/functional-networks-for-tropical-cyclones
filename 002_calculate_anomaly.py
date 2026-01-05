@@ -15,8 +15,8 @@ import pandas as pd
 REGION = "Bengal_Bay"
 CYCLONE = "Gaja"
 
-clim_path = f"Metrics/{REGION}/mslp_climatology_1979_2018_daily.nc"
-data_dir = f"Dataset/{REGION}/mslp"  # Pasta com arquivos MSLP 2018 (ou todos, mas filtraremos 2018)
+clim_path = f"Metrics/{REGION}/climatology_1979_2018_daily.nc"
+data_dir = f"Dataset/{REGION}/mslp"
 output_anomaly = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018.nc"
 
 # Carregar climatologia
@@ -24,13 +24,13 @@ clim = xr.open_dataarray(clim_path)
 print(f"Climatologia: {clim.shape} → (lat, lon, dayofyear=1-365)")
 
 # ================================
-# 1. Listar TODOS os arquivos MSLP (assumindo múltiplos para out/nov)
+# 1. Listar TODOS os arquivos MSLP
 # ================================
 all_files = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
 print(f"Total arquivos encontrados: {len(all_files)}")
 
 # ================================
-# 2. Filtrar e processar APENAS 2018, out/nov
+# 2. Filtrar e processar
 # ================================
 anomaly_list = []
 time_list = []

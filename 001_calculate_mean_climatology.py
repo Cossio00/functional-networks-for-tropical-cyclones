@@ -11,11 +11,10 @@ from datetime import datetime
 # ================================
 # CONFIGURAÇÕES
 # ================================
-region = "Bengal_Bay"
-cyclone = "Gaja"
+REGION = "Bengal_Bay"
 
-data_dir = f"Dataset/{region}/mslp"
-output_file = f"Metrics/{region}/mslp_climatology_1979_2018_daily.nc"
+data_dir = f"Dataset/{REGION}/mslp"
+output_file = f"Metrics/{REGION}/climatology_1979_2018_daily.nc"
 file_list = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
 print(f"Encontrados {len(file_list)} arquivos.")
 

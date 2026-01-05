@@ -2,10 +2,13 @@ import pickle
 import numpy as np
 import networkx as nx
 
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
+
 # ------------------------------------------------------------------
 # 1. Carregar o pickle gerado anteriormente no cálculo de tau de Kendall
 # ------------------------------------------------------------------
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "rb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
 
 antes   = data['antes']
@@ -27,5 +30,5 @@ degree_durante = np.array([G_durante.degree(i) for i in range(G_durante.number_o
 antes['degree']   = degree_antes
 durante['degree'] = degree_durante
 
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "wb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "wb") as f:
     pickle.dump({'antes': antes, 'durante': durante}, f)

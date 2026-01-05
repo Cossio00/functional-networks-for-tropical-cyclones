@@ -2,10 +2,12 @@ import pickle
 import numpy as np
 from math import radians, sin, cos, sqrt, atan2
 
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
 # ------------------------------------------------------------------
 # 1. Carregar o pickle com adjacência + coordenadas (gerado pelo Kendall)
 # ------------------------------------------------------------------
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "rb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
 
 antes   = data['antes']
@@ -53,7 +55,7 @@ mean_dist_durante = calc_mean_distance(adj_durante, lat, lon)
 antes['mean_dist']   = mean_dist_antes
 durante['mean_dist'] = mean_dist_durante
 
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "wb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "wb") as f:
     pickle.dump({'antes': antes, 'durante': durante}, f)
 
 print("DISTÂNCIA GEOGRÁFICA MÉDIA CALCULADA COM SUCESSO!")
@@ -61,4 +63,3 @@ print(f"   • Distância média ANTES:   {np.nanmean(mean_dist_antes):.0f} km")
 print(f"   • Distância média DURANTE: {np.nanmean(mean_dist_durante):.0f} km")
 print(f"   • Mínimo/Máximo ANTES:     {np.nanmin(mean_dist_antes):.0f} / {np.nanmax(mean_dist_antes):.0f} km")
 print(f"   • Mínimo/Máximo DURANTE:   {np.nanmin(mean_dist_durante):.0f} / {np.nanmax(mean_dist_durante):.0f} km")
-print("   → Arquivo salvo: kendall_resultados_COM_mean_dist_gaja.pkl")

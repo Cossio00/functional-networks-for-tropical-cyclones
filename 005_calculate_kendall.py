@@ -4,13 +4,15 @@ from scipy.stats import kendalltau
 from itertools import combinations
 import pickle
 
-# Esse código calcula a correlação Tau de Kendall a partir das janelas deslizantes de Gaja
+# Esse código calcula a correlação Tau de Kendall a partir das janelas deslizantes
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
 
 # ------------------------------------------------------------------
 # 1. ABRIR AS JANELAS
 # ------------------------------------------------------------------
-antes   = xr.open_dataarray("Metrics/Gaja/anomalias_janela_antes_gaja_2018.nc")
-durante = xr.open_dataarray("Metrics/Gaja/anomalias_janela_durante_gaja_2018.nc")
+antes   = xr.open_dataarray(f"Metrics/{REGION}/{CYCLONE}/windows_before_{CYCLONE}.nc")
+durante = xr.open_dataarray(f"Metrics/{REGION}/{CYCLONE}/windows_during_{CYCLONE}.nc")
 
 
 def calcula_kendall_gupta(janela_da):
@@ -72,5 +74,5 @@ res_durante = calcula_kendall_gupta(durante)
 # ------------------------------------------------------------------
 # 4. SALVAR
 # ------------------------------------------------------------------
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "wb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "wb") as f:
     pickle.dump({'antes': res_antes, 'durante': res_durante}, f)

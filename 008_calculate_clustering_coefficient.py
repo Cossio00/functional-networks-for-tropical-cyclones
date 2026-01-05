@@ -2,10 +2,13 @@ import pickle
 import numpy as np
 import networkx as nx
 
+
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
 # ------------------------------------------------------------------
 # 1. Carregar o pickle com a matriz de adjacência correta
 # ------------------------------------------------------------------
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "rb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
 
 antes   = data['antes']
@@ -29,7 +32,7 @@ clustering_durante = np.array([nx.clustering(G_durante, i) for i in range(G_dura
 antes['clustering']   = clustering_antes
 durante['clustering'] = clustering_durante
 
-with open("Metrics/Gaja/kendall_resultados_gaja.pkl", "wb") as f:
+with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "wb") as f:
     pickle.dump({'antes': antes, 'durante': durante}, f)
 
 print("LOCAL CLUSTERING COEFFICIENT CALCULADO COM SUCESSO!")

@@ -2,12 +2,14 @@ import xarray as xr
 
 # Esse código aplica a máscara terra mar ao mapa com mslp, tornando Nan os valores em porção de terra.
 
+REGION = "Bengal_Bay"
+CYCLONE = "Gaja"
 # ================================
 # CONFIGURAÇÕES
 # ================================
-anomaly_file = "Metrics/Gaja/mslp_anomalies_oct_nov_2018.nc"
-mask_file = "Dataset/Gaja/land_sea/land_sea_mask_gaja.nc"
-output_file = "Metrics/Gaja/mslp_anomalies_oct_nov_2018_ocean.nc"
+anomaly_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018.nc"
+mask_file = f"Dataset/{REGION}/land_sea/land_sea_mask.nc"
+output_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018_ocean.nc"
 
 # ================================
 # 1. CARREGAR ANOMALIAS
@@ -58,8 +60,7 @@ anoms_ocean.attrs.update({
 anoms_ocean.name = 'mslp_anomaly'
 
 anoms_ocean.to_netcdf(
-    output_file,
-    encoding={'mslp_anomaly': {'zlib': True, 'complevel': 5}}
+    output_file
 )
 
 print(f"\nMÁSCARA OCEÂNICA APLICADA COM SUCESSO!")
