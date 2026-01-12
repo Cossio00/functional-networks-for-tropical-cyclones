@@ -1,7 +1,5 @@
 import pickle
 import numpy as np
-import os
-import sys
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
@@ -9,7 +7,7 @@ import sern as sn #Código obtido do repositório de Rheinwalt para calcular as 
 
 
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 
 # Carrega o pickle original
 with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:

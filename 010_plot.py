@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 # Carrega o pickle com as métricas corrigidas
 with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
@@ -41,16 +41,19 @@ fig.suptitle(f"{CYCLONE}",
 metrics = [
     #("Degree (corrected)", deg_a, deg_d, 0.6, 1.8),
     #("Degree (corrected)", deg_a, deg_d, 0.04, 2.72),
-    ("Degree (corrected)", deg_a, deg_d, 0.04, 2.45),
+    #("Degree (corrected)", deg_a, deg_d, 0.04, 2.45), #Gaja
+    ("Degree (corrected)", deg_a, deg_d, 0.0, 4.0), #Luban
     #("Mean geographical distance (corrected)", dist_a, dist_d, 0.7, 1.4),
     #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.83),
-    ("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.67),
+    #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.67), #Gaja
+    ("Mean geographical distance (corrected)", dist_a, dist_d, 0.28, 1.72), #Luban
     #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 2.0),
     #("Local clustering coefficient (corrected)", clus_a, clus_d, 0, 2.75),
-    ("Local clustering coefficient (corrected)", clus_a, clus_d, 0.3, 2.1)
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.3, 2.1), #Gaja
+    ("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 3.0) #Luban
 ]
 
-periods = ["Antes do Gaja\n(29 out – 07 nov 2018)", "Durante o Gaja\n(10–19 nov 2018)"]
+periods = [f"Antes do {CYCLONE}\n", "Durante o {CYCLONE}\n"]
 letters = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
 
 for col, (title, f1, f2, vmin, vmax) in enumerate(metrics):

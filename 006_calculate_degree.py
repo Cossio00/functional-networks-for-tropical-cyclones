@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 
 # ------------------------------------------------------------------
 # 1. Carregar o pickle gerado anteriormente no cálculo de tau de Kendall

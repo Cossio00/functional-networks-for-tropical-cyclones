@@ -1,68 +1,101 @@
 import xarray as xr
+import os
+from dictionary import CYCLONES
 
-# Esse código aplica a máscara terra mar ao mapa com mslp, tornando Nan os valores em porção de terra.
-
+# ================================
+# CONFIGURAÇÃO DINÂMICA
+# ================================
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
-# ================================
-# CONFIGURAÇÕES
-# ================================
-anomaly_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018.nc"
+CYCLONE = "Luban"
+
+if CYCLONE not in CYCLONES:
+    raise ValueError(f"Ciclone '{CYCLONE}' não encontrado no dicionário CYCLONES.")
+
+# Caminhos
+anomalies_antes_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_anomalies_before.nc"
+anomalies_durante_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_anomalies_during.nc"
 mask_file = f"Dataset/{REGION}/land_sea/land_sea_mask.nc"
-output_file = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018_ocean.nc"
+
+output_dir = f"Metrics/{REGION}/{CYCLONE}"
+os.makedirs(output_dir, exist_ok=True)
+
+output_antes_ocean = os.path.join(output_dir, f"{CYCLONE}_ocean_anomalies_before.nc")
+output_durante_ocean = os.path.join(output_dir, f"{CYCLONE}_ocean_anomalies_during.nc")
 
 # ================================
-# 1. CARREGAR ANOMALIAS
-# ================================
-anoms = xr.open_dataarray(anomaly_file)
-
-# ================================
-# 2. CARREGAR E LIMPAR MÁSCARA (remover time:1)
+# 1. CARREGAR MÁSCARA TERRA-MAR
 # ================================
 print("Carregando máscara terra-mar...")
-mask_ds = xr.open_dataset(mask_file)               # Abre como Dataset
+mask_ds = xr.open_dataset(mask_file)
 
-# Seleciona a variável (ajuste o nome se for diferente de 'lsm')
-mask = mask_ds['lsm']  # ou mask_ds['land_sea_mask'] se for outro nome
+if 'lsm' in mask_ds:
+    mask = mask_ds['lsm']
+elif 'land_sea_mask' in mask_ds:
+    mask = mask_ds['land_sea_mask']
+else:
+    raise KeyError("Variável de máscara não encontrada. Verifique o nome no arquivo.")
 
-# REMOVE DIMENSÃO TIME (e qualquer outra de tamanho 1)
+# Remove dimensão time se existir e squeeze
 if 'time' in mask.dims:
-    mask = mask.isel(time=0, drop=True)             # Remove 'time' completamente
-mask = mask.squeeze()                               # Remove todas as dims de tamanho 1 restantes
+    mask = mask.isel(time=0, drop=True)
+mask = mask.squeeze()
+
+print(f"Máscara carregada: {mask.shape} (lat, lon)")
 
 # ================================
-# 3. ALINHAR COORDENADAS
+# 2. FUNÇÃO PARA APLICAR MÁSCARA E SALVAR
 # ================================
-mask = mask.interp(latitude=anoms.latitude, longitude=anoms.longitude, method='nearest')
+def apply_and_save_ocean_mask(input_file, output_file, period_name):
+    print(f"\nAplicando máscara ao período '{period_name}'...")
+    print(f"Abrindo: {input_file}")
+    
+    anomaly_da = xr.open_dataarray(input_file)
+    
+    # Interpola máscara para a grade das anomalias
+    mask_interp = mask.interp(latitude=anomaly_da.latitude, longitude=anomaly_da.longitude, method='nearest')
+    
+    # Máscara binária: True = oceano (lsm < 0.5)
+    ocean_mask = mask_interp < 0.5
+    
+    # Aplica máscara
+    anomaly_ocean = anomaly_da.where(ocean_mask)
+    
+    # Atributos
+    anomaly_ocean.attrs.update({
+        'cyclone': CYCLONE,
+        'region': REGION,
+        'period': period_name,
+        'mask_applied': 'ocean_only (land points set to NaN)',
+        'ocean_points': int(ocean_mask.sum().item()),
+        'reference': 'Gupta et al. (2021)'
+    })
+    
+    # Encoding para compressão
+    encoding = {
+        'mslp_anomaly': {'zlib': True, 'complevel': 5},
+        'time': {
+            'units': 'days since 1970-01-01 00:00:00',
+            'calendar': 'gregorian'
+        }
+    }
+    
+    # Salva arquivo separado
+    anomaly_ocean.to_netcdf(output_file, encoding=encoding)
+    print(f"Salvo: {output_file}")
+    print(f"   Pontos oceânicos: {int(ocean_mask.sum().item())}")
+    print(f"   Timesteps: {len(anomaly_ocean.time)}")
+    
+    anomaly_da.close()
 
 # ================================
-# 4. CRIAR MÁSCARA BINÁRIA (True = oceano)
+# 3. APLICA PARA ANTES E DURANTE
 # ================================
-ocean_mask = (mask < 0.5)  # Agora garantidamente 2D (lat, lon)
+apply_and_save_ocean_mask(anomalies_antes_file, output_antes_ocean, "antes")
+apply_and_save_ocean_mask(anomalies_durante_file, output_durante_ocean, "durante")
 
-# ================================
-# 5. APLICAR MÁSCARA
-# ================================
-anoms_ocean = anoms.where(ocean_mask)  # Aplica a mesma máscara fixa em todos os 488 timesteps
-
-# ================================
-# 6. SALVAR
-# ================================
-anoms_ocean.attrs.update({
-    'mask_applied': 'ocean_only (fixed 2D mask)',
-    'land_points': 'set_to_NaN',
-    'reference': 'Gupta et al. (2021) - only ocean points used in network',
-    'ocean_points': int(ocean_mask.sum().item()),
-    'note': 'Land-sea mask squeezed to 2D before applying'
-})
-
-# Renomear variável para clareza
-anoms_ocean.name = 'mslp_anomaly'
-
-anoms_ocean.to_netcdf(
-    output_file
-)
+mask_ds.close()
 
 print(f"\nMÁSCARA OCEÂNICA APLICADA COM SUCESSO!")
-print(f"  Arquivo salvo: {output_file}")
-print(f"  Pontos oceânicos mantidos: {int(ocean_mask.sum().item())}")
+print(f"Dois arquivos gerados para {CYCLONE}:")
+print(f"   {output_antes_ocean}")
+print(f"   {output_durante_ocean}")

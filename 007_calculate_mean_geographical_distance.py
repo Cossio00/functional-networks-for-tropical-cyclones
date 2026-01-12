@@ -3,7 +3,7 @@ import numpy as np
 from math import radians, sin, cos, sqrt, atan2
 
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 # ------------------------------------------------------------------
 # 1. Carregar o pickle com adjacência + coordenadas (gerado pelo Kendall)
 # ------------------------------------------------------------------

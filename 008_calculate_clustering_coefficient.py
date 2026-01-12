@@ -4,7 +4,7 @@ import networkx as nx
 
 
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 # ------------------------------------------------------------------
 # 1. Carregar o pickle com a matriz de adjacência correta
 # ------------------------------------------------------------------

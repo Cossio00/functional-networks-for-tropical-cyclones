@@ -6,7 +6,7 @@ import pickle
 
 # Esse código calcula a correlação Tau de Kendall a partir das janelas deslizantes
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban"
 
 # ------------------------------------------------------------------
 # 1. ABRIR AS JANELAS
@@ -65,10 +65,10 @@ def calcula_kendall_gupta(janela_da):
         'N_ocean': N
     }
 
-print("=== JANELA ANTES (29/out – 07/nov) ===")
+print("=== JANELA ANTES ===")
 res_antes = calcula_kendall_gupta(antes)
 
-print("\n=== JANELA DURANTE (10/nov – 19/nov) ===")
+print("\n=== JANELA DURANTE ===")
 res_durante = calcula_kendall_gupta(durante)
 
 # ------------------------------------------------------------------

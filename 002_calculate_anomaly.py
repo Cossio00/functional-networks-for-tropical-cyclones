@@ -2,104 +2,125 @@ import xarray as xr
 import numpy as np
 import glob
 import os
-from datetime import datetime
 import pandas as pd
-
-# Esse código é responsável pelo cálculo da anomalia da climatologia
-# Em resumo: a anomalia de um momento em um ponto é o valor de mslp naquele momento
-# menos a climatologia média daquele ponto naquele dia do ano.
+from dictionary import CYCLONES
 
 # ================================
-# CONFIGURAÇÕES
+# CONFIGURAÇÃO DINÂMICA
 # ================================
 REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Luban" 
 
+if CYCLONE not in CYCLONES:
+    raise ValueError(f"Ciclone '{CYCLONE}' não encontrado no dicionário CYCLONES.")
+
+# Caminhos
 clim_path = f"Metrics/{REGION}/climatology_1979_2018_daily.nc"
-data_dir = f"Dataset/{REGION}/mslp"
-output_anomaly = f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_mslp_anomalies_oct_nov_2018.nc"
+mslp_dir = f"Dataset/{REGION}/mslp"
+output_dir = f"Metrics/{REGION}/{CYCLONE}"
+os.makedirs(output_dir, exist_ok=True)
 
-# Carregar climatologia
+# Carrega climatologia única da região
 clim = xr.open_dataarray(clim_path)
-print(f"Climatologia: {clim.shape} → (lat, lon, dayofyear=1-365)")
 
 # ================================
-# 1. Listar TODOS os arquivos MSLP
+# FUNÇÃO PARA CALCULAR ANOMALIA DE UM PERÍODO
 # ================================
-all_files = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
-print(f"Total arquivos encontrados: {len(all_files)}")
-
-# ================================
-# 2. Filtrar e processar
-# ================================
-anomaly_list = []
-time_list = []
-
-for file_path in all_files:
-    print(f"Verificando: {os.path.basename(file_path)}")
-    ds = xr.open_dataset(file_path)
+def calculate_anomalies_for_period(start_date, end_date, period_name):
+    print(f"\nCalculando anomalias para '{period_name}': {start_date} a {end_date}")
     
-    # Filtrar APENAS 2018
-    ds_2018 = ds.sel(time=slice('2018-10-01', '2018-11-30'))  # Só 2018, out/nov
-    if len(ds_2018.time) == 0:
-        ds.close()
-        continue  # Pula arquivos sem 2018
+    start_pd = pd.Timestamp(start_date)
+    end_pd = pd.Timestamp(end_date)
     
-    mslp = ds_2018['msl'] if 'msl' in ds_2018 else ds_2018['mslp']
+    all_files = sorted(glob.glob(os.path.join(mslp_dir, "mslp_*.nc")))
+    if not all_files:
+        raise FileNotFoundError(f"Nenhum arquivo MSLP encontrado em {mslp_dir}")
     
-    # Para cada timestamp em 2018 out/nov
-    for t in range(len(ds_2018['time'])):
-        time = ds_2018['time'].isel(time=t)
-        month = int(time.dt.month.values)
-        day = int(time.dt.day.values)
+    print(f"Arquivos MSLP encontrados: {len(all_files)}")
+    
+    anomaly_list = []
+    time_list = []
+    
+    for file_path in all_files:
+        ds = xr.open_dataset(file_path)
         
-        if month not in [10, 11]:  # Só out/nov
+        # Filtra apenas o período desejado
+        ds_period = ds.sel(time=slice(start_pd, end_pd))
+        if len(ds_period.time) == 0:
+            ds.close()
             continue
         
-        try:
-            doy = datetime(2020, month, day).timetuple().tm_yday
-            if doy > 365:
+        mslp = ds_period['msl'] if 'msl' in ds_period else ds_period['mslp']
+        
+        for t in range(len(ds_period.time)):
+            time_val = ds_period['time'][t].values
+            dt = pd.Timestamp(time_val)
+            
+            # Garante que está dentro do intervalo
+            if not (start_pd <= dt <= end_pd):
+                continue
+                
+            doy = dt.dayofyear
+            if doy > 365:  # 29/fev → usa dia 365 (28/fev)
                 doy = 365
             
-            clim_day = clim.sel(dayofyear=doy)
-            anomaly = mslp.isel(time=t) - clim_day
-            
-            anomaly_list.append(anomaly.values)
-            time_list.append(pd.Timestamp(time.values))
-            
-        except Exception as e:
-            print(f"  Erro em {time.values}: {e}")
-            continue
+            try:
+                clim_day = clim.sel(dayofyear=doy)
+                anomaly = mslp.isel(time=t) - clim_day
+                anomaly_list.append(anomaly.values)
+                time_list.append(dt)
+            except Exception as e:
+                print(f"  Erro em {dt}: {e}")
+                continue
+        
+        ds.close()
     
-    ds.close()
+    if not anomaly_list:
+        raise ValueError(f"Nenhum dado encontrado para o período '{period_name}'")
+    
+    # Verifica número de timesteps
+    found_timesteps = len(anomaly_list)
+    days_span = (end_pd - start_pd).days + 1
+    expected_timesteps = days_span * 8  # 8 horários por dia
+    
+    # Monta DataArray
+    anomalies = np.stack(anomaly_list)
+    times = np.array(time_list)
+    
+    anomaly_da = xr.DataArray(
+        anomalies,
+        coords={'time': times, 'latitude': clim.latitude, 'longitude': clim.longitude},
+        dims=['time', 'latitude', 'longitude'],
+        name='mslp_anomaly',
+        attrs={
+            'units': 'Pa',
+            'long_name': f'MSLP Anomaly - {period_name}',
+            'cyclone': CYCLONE,
+            'period': f"{start_date} to {end_date}",
+            'method': 'Daily climatology subtracted',
+            'reference': 'Gupta et al. (2021)'
+        }
+    ).sortby('time')
+    
+    # Salva arquivo separado
+    output_file = os.path.join(output_dir, f"{CYCLONE}_anomalies_{period_name}.nc")
+    anomaly_da.to_netcdf(output_file)
+    print(f"  Anomalias '{period_name}' salvas em: {output_file}")
+    print(f"  Shape: {anomaly_da.shape}")
 
 # ================================
-# 3. Montar DataArray
+# EXECUTA PARA "ANTES" E "DURANTE"
 # ================================
-anomalies = np.stack(anomaly_list)
-times = np.array(time_list)
-
-anomaly_da = xr.DataArray(
-    anomalies,
-    coords={'time': times, 'latitude': clim.latitude, 'longitude': clim.longitude},
-    dims=['time', 'latitude', 'longitude'],
-    name='mslp_anomaly',
-    attrs={
-        'units': 'Pa',
-        'long_name': 'MSLP Anomaly 2018 (out/nov) - Climatology 1979-2018',
-        'method': 'Daily climatology subtracted from each 3-hourly value',
-        'reference': 'Gupta et al. (2021), Climate Dynamics',
-        'period': '2018-10-01 to 2018-11-30'
-    }
+calculate_anomalies_for_period(
+    CYCLONES[CYCLONE]["antes"][0],
+    CYCLONES[CYCLONE]["antes"][1],
+    "before"
 )
 
-# === ORDENAR TEMPO ===
-anomaly_da = anomaly_da.sortby('time')
+calculate_anomalies_for_period(
+    CYCLONES[CYCLONE]["durante"][0],
+    CYCLONES[CYCLONE]["durante"][1],
+    "during"
+)
 
-# ================================
-# 4. Salvar + VALIDAÇÃO
-# ================================
-anomaly_da.to_netcdf(output_anomaly)
-print(f"\nANOMALIAS SALVAS: {output_anomaly}")
-print(f"  Shape: {anomaly_da.shape}")
-print(f"  Período: {anomaly_da.time.min().values} → {anomaly_da.time.max().values}")
+print(f"\nCálculo de anomalias concluído para o ciclone {CYCLONE}!")
