@@ -2,13 +2,12 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 REGION = "Bengal_Bay"
-CYCLONE = "Luban"
+CYCLONE = "Gaja"
+
 # Carrega o pickle com as métricas corrigidas
 with open(f"Metrics/{REGION}/{CYCLONE}/{CYCLONE}_metrics.pkl", "rb") as f:
     data = pickle.load(f)
-
 antes = data['antes']
 durante = data['durante']
 
@@ -33,28 +32,44 @@ lon_centers = np.linspace(49.5, 100.0, 68)      # 49.5°E → 100°E
 lat_centers = np.linspace(34.5, 4.5, 41)        # 34.5°N → 4.5°N (decrescente como no ERA5)
 Lon_c, Lat_c = np.meshgrid(lon_centers, lat_centers, indexing='xy')
 
-# Plot
-fig, axes = plt.subplots(2, 3, figsize=(19, 10.5), constrained_layout=True)
-fig.suptitle(f"{CYCLONE}",
-             fontsize=17, fontweight='bold', y=0.98)
+
+fig, axes = plt.subplots(2, 3, figsize=(13, 6), constrained_layout=True)
+
+def get_vmin_vmax(arr1, arr2, buffer=0.05):
+    vals = np.concatenate([arr1.ravel(), arr2.ravel()])
+    vals = vals[~np.isnan(vals)]
+    if len(vals) == 0:
+        return 0, 1
+    vmin = np.min(vals)
+    vmax = np.max(vals)
+    return vmin - buffer * (vmax - vmin), vmax + buffer * (vmax - vmin)
 
 metrics = [
+    ("Degree (corrected)", deg_a, deg_d, *get_vmin_vmax(deg_a, deg_d)),
+    ("Mean geographical distance (corrected)", dist_a, dist_d, *get_vmin_vmax(dist_a, dist_d)),
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, *get_vmin_vmax(clus_a, clus_d)),
     #("Degree (corrected)", deg_a, deg_d, 0.6, 1.8),
     #("Degree (corrected)", deg_a, deg_d, 0.04, 2.72),
     #("Degree (corrected)", deg_a, deg_d, 0.04, 2.45), #Gaja
-    ("Degree (corrected)", deg_a, deg_d, 0.0, 4.0), #Luban
+    #("Degree (corrected)", deg_a, deg_d, 0.0, 4.0), #Luban
+    #("Degree (corrected)", deg_a, deg_d, 0.0, 2.5), #Vardah
     #("Mean geographical distance (corrected)", dist_a, dist_d, 0.7, 1.4),
     #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.83),
     #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 1.67), #Gaja
-    ("Mean geographical distance (corrected)", dist_a, dist_d, 0.28, 1.72), #Luban
+    #("Mean geographical distance (corrected)", dist_a, dist_d, 0.28, 1.72), #Luban
+    #("Mean geographical distance (corrected)", dist_a, dist_d, 0.24, 2.4), #Vardah
     #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 2.0),
     #("Local clustering coefficient (corrected)", clus_a, clus_d, 0, 2.75),
-    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.3, 2.1), #Gaja
-    ("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 3.0) #Luban
+    ("Local clustering coefficient (corrected)", clus_a, clus_d, 0.6, 2.1), #Gaja
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.8, 3.0) #Luban
+    #("Local clustering coefficient (corrected)", clus_a, clus_d, 0.9, 2.45) #Vardah
 ]
 
-periods = [f"Antes do {CYCLONE}\n", "Durante o {CYCLONE}\n"]
+periods = [f"Antes do {CYCLONE}\n", f"Durante o {CYCLONE}\n"]
 letters = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
+
+# Dicionário para guardar as imagens das barras de cor (uma por coluna)
+cbar_images = {}
 
 for col, (title, f1, f2, vmin, vmax) in enumerate(metrics):
     for row, field in enumerate([f1, f2]):
@@ -62,17 +77,19 @@ for col, (title, f1, f2, vmin, vmax) in enumerate(metrics):
         im = ax.pcolormesh(Lon_c, Lat_c, field,
                            cmap='RdBu_r', vmin=vmin, vmax=vmax, shading='auto')
         
-        ax.set_xlim(49.5, 100.0)    # domínio real
-        ax.set_ylim(4.5, 34.5)     # domínio real (ajusta visualmente)
-        ax.set_xlabel("Longitude (°E)", fontsize=11)
-        if col == 0:
-            ax.set_ylabel("Latitude (°N)", fontsize=11)
+        ax.set_xlim(49.5, 100.0)
+        ax.set_ylim(4.5, 34.5)
         
-        ax.set_title(f"{letters[row*3 + col]} {title}\n{periods[row]}",
-                     fontsize=12, pad=15)
+        ax.text(-0.12, 0.95, letters[row*3 + col], transform=ax.transAxes,
+                fontsize=14, fontweight='bold', va='top', ha='right')
         
-        cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.02)
-        cbar.set_label(title.split("(")[0].strip(), fontsize=10)
+        if row == 1: 
+            cbar_images[col] = im
+
+for col, im in cbar_images.items():
+    cbar = fig.colorbar(im, ax=axes[:, col], orientation='horizontal',
+                         fraction=0.046, pad=0.08, shrink=1)
+    cbar.set_label(metrics[col][0].split("(")[0].strip()+" (corrected)", fontsize=10)
 
 # Terra em cinza
 for ax in axes.flat:
