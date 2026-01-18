@@ -9,7 +9,6 @@ from datetime import datetime
 # A climatologia média pega todos os valores de mslp de 1979 a 2018 e calcula uma média para cada dia do ano
 
 def calculate_mean_climatology(region):
-    print("chegou")
     data_dir = f"Dataset/{region}/mslp"
     output_file = f"Metrics/{region}/climatology_1979_2018_daily.nc"
     file_list = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
