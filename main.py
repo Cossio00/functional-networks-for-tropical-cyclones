@@ -1,5 +1,6 @@
 import calculate_mean_climatology as cli
 import calculate_anomaly as ano
+import apply_land_sea_mask as lsm
 from dictionary import CYCLONES
 
 #   A partir deste código, todo o processo para a geração das métricas e plotagem é rodado. 
@@ -15,6 +16,7 @@ def main():
 
     #cli.calculate_mean_climatology(REGION)
     ano.calculate_anomaly(REGION, CYCLONE)
+    lsm.apply_land_sea_mask(REGION, CYCLONE)
 
 
 if __name__ == "__main__":
