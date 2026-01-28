@@ -9,7 +9,6 @@ import calculate_clustering_coefficient as clust
 import boundary_effects_correction as corr
 import plot as plt
 
-
 from dictionary import CYCLONES
 
 #   A partir deste código, todo o processo para a geração das métricas e plotagem é rodado. 
@@ -33,7 +32,6 @@ def main():
     clust.calculate_clustering(REGION, CYCLONE)
     corr.boundary_correction(REGION, CYCLONE)
     plt.plot(REGION, CYCLONE)
-
 
 if __name__ == "__main__":
     main()
