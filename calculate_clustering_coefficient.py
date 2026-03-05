@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 import networkx as nx
+from dictionary import CYCLONES
+
 
 def calculate_clustering(region, cyclone):
     # ------------------------------------------------------------------
@@ -9,17 +11,20 @@ def calculate_clustering(region, cyclone):
     with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "rb") as f:
         data = pickle.load(f)
 
-    antes   = data['antes']
+    if "antes" in CYCLONES[cyclone]:
+        antes   = data['antes']   
     durante = data['durante']
 
     # Criar os grafos (não-direcionados, binários)
-    G_antes   = nx.from_numpy_array(antes['adjacency_matrix'])
+    if "antes" in CYCLONES[cyclone]:
+        G_antes   = nx.from_numpy_array(antes['adjacency_matrix'])
     G_durante = nx.from_numpy_array(durante['adjacency_matrix'])
 
     # ------------------------------------------------------------------
     # 2. Calcular o coeficiente de agrupamento local
     # ------------------------------------------------------------------
-    clustering_antes   = np.array([nx.clustering(G_antes,   i) for i in range(G_antes.number_of_nodes())])
+    if "antes" in CYCLONES[cyclone]:
+        clustering_antes   = np.array([nx.clustering(G_antes,   i) for i in range(G_antes.number_of_nodes())])
     clustering_durante = np.array([nx.clustering(G_durante, i) for i in range(G_durante.number_of_nodes())])
 
     # Nós com degree 0 ou 1 recebem clustering = 0.0 automaticamente (comportamento padrão do NetworkX)
@@ -27,14 +32,16 @@ def calculate_clustering(region, cyclone):
     # ------------------------------------------------------------------
     # 3. Salvar no pickle
     # ------------------------------------------------------------------
-    antes['clustering']   = clustering_antes
+    if "antes" in CYCLONES[cyclone]:
+        antes['clustering']   = clustering_antes
     durante['clustering'] = clustering_durante
 
-    with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
-        pickle.dump({'antes': antes, 'durante': durante}, f)
+    if "antes" in CYCLONES[cyclone]:    
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'antes': antes, 'durante': durante}, f)
+    else:
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'durante': durante}, f)
+
 
     print("LOCAL CLUSTERING COEFFICIENT CALCULADO COM SUCESSO!")
-    print(f"   • Clustering médio ANTES:   {np.mean(clustering_antes):.3f}")
-    print(f"   • Clustering médio DURANTE: {np.mean(clustering_durante):.3f}")
-    print(f"   • Mínimo/Máximo ANTES:      {clustering_antes.min():.3f} / {clustering_antes.max():.3f}")
-    print(f"   • Mínimo/Máximo DURANTE:    {clustering_durante.min():.3f} / {clustering_durante.max():.3f}")
