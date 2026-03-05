@@ -3,6 +3,7 @@ import numpy as np
 from scipy.stats import kendalltau
 from itertools import combinations
 import pickle
+from dictionary import CYCLONES
 
 # Esse código calcula a correlação Tau de Kendall a partir das janelas deslizantes
 
@@ -10,7 +11,8 @@ def calculate_kendall(region, cyclone):
     # ------------------------------------------------------------------
     # 1. ABRIR AS JANELAS
     # ------------------------------------------------------------------
-    antes   = xr.open_dataarray(f"Metrics/{region}/{cyclone}/windows_before_{cyclone}.nc")
+    if "antes" in CYCLONES[cyclone]:
+        antes   = xr.open_dataarray(f"Metrics/{region}/{cyclone}/windows_before_{cyclone}.nc")
     durante = xr.open_dataarray(f"Metrics/{region}/{cyclone}/windows_during_{cyclone}.nc")
 
 
@@ -49,8 +51,12 @@ def calculate_kendall(region, cyclone):
         print(f"   → Arestas na rede: {int(adj.sum() / 2)}")
 
         # Coordenadas dos pontos oceânicos
-        lat_2d = np.repeat(janela_da.latitude.values[:, np.newaxis], 68, axis=1)
-        lon_2d = np.repeat(janela_da.longitude.values[np.newaxis, :], 41, axis=0)
+        nlat = len(janela_da.latitude)
+        nlon = len(janela_da.longitude)
+        
+
+        lat_2d = np.repeat(janela_da.latitude.values[:, np.newaxis], nlon, axis=1)
+        lon_2d = np.repeat(janela_da.longitude.values[np.newaxis, :], nlat, axis=0)
         lat_ocean = lat_2d[ocean_mask]
         lon_ocean = lon_2d[ocean_mask]
 
@@ -61,11 +67,15 @@ def calculate_kendall(region, cyclone):
             'ocean_mask': ocean_mask,
             'lat_ocean': lat_ocean,
             'lon_ocean': lon_ocean,
+            'lat': janela_da.latitude.values,
+            'lon': janela_da.longitude.values,
             'N_ocean': N
         }
 
-    print("=== JANELA ANTES ===")
-    res_antes = calcula_kendall_gupta(antes)
+
+    if "antes" in CYCLONES[cyclone]:
+        print("=== JANELA ANTES ===")
+        res_antes = calcula_kendall_gupta(antes)
 
     print("\n=== JANELA DURANTE ===")
     res_durante = calcula_kendall_gupta(durante)
@@ -73,5 +83,10 @@ def calculate_kendall(region, cyclone):
     # ------------------------------------------------------------------
     # 4. SALVAR
     # ------------------------------------------------------------------
-    with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
-        pickle.dump({'antes': res_antes, 'durante': res_durante}, f)
+    if "antes" in CYCLONES[cyclone]:
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'antes': res_antes, 'durante': res_durante}, f)
+    else:
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'durante': res_durante}, f)
+    
