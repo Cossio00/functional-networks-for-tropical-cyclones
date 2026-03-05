@@ -1,8 +1,9 @@
 import xarray as xr
 import os
+from dictionary import CYCLONES
 
 def apply_land_sea_mask(region, cyclone):
-    # Caminhos
+    # Caminhos    
     anomalies_antes_file = f"Metrics/{region}/{cyclone}/{cyclone}_anomalies_before.nc"
     anomalies_durante_file = f"Metrics/{region}/{cyclone}/{cyclone}_anomalies_during.nc"
     mask_file = f"Dataset/{region}/land_sea/land_sea_mask.nc"
@@ -81,12 +82,13 @@ def apply_land_sea_mask(region, cyclone):
     # ================================
     # 3. APLICA PARA ANTES E DURANTE
     # ================================
-    apply_and_save_ocean_mask(anomalies_antes_file, output_antes_ocean, "antes")
+    if "antes" in CYCLONES[cyclone]:
+        apply_and_save_ocean_mask(anomalies_antes_file, output_antes_ocean, "antes")
+    else:
+        print(f"\nCiclone {cyclone} não possui período 'antes'. Pulando...")
+
     apply_and_save_ocean_mask(anomalies_durante_file, output_durante_ocean, "durante")
 
     mask_ds.close()
 
     print(f"\nMÁSCARA OCEÂNICA APLICADA COM SUCESSO!")
-    print(f"Dois arquivos gerados para {cyclone}:")
-    print(f"   {output_antes_ocean}")
-    print(f"   {output_durante_ocean}")
