@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
+from dictionary import CYCLONES
 
 import sern as sn #Código obtido do repositório de Rheinwalt para calcular as SERN 
 
@@ -11,11 +12,12 @@ def boundary_correction(region, cyclone):
     with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "rb") as f:
         data = pickle.load(f)
 
-    antes = data['antes']
+    if "antes" in CYCLONES[cyclone]:    
+        antes = data['antes']
     durante = data['durante']
 
-    lat_ocean = antes['lat_ocean']
-    lon_ocean = antes['lon_ocean']
+    lat_ocean = durante['lat_ocean']
+    lon_ocean = durante['lon_ocean']
     n_nodes = len(lat_ocean)
 
     # Pré-computa matriz de distâncias Haversine (para mean_dist)
@@ -88,15 +90,16 @@ def boundary_correction(region, cyclone):
         return surrogate_means
 
     # === Correção para a janela ANTES ===
-    print("\n=== PROCESSANDO JANELA 'ANTES' ===")
-    mean_degree_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "degree", n_surrogates=1000)
-    antes['degree_corr'] = antes['degree'] / (mean_degree_antes + 1e-12)
+    if "antes" in CYCLONES[cyclone]:    
+        print("\n=== PROCESSANDO JANELA 'ANTES' ===")
+        mean_degree_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "degree", n_surrogates=1000)
+        antes['degree_corr'] = antes['degree'] / (mean_degree_antes + 1e-12)
 
-    mean_clust_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "clustering", n_surrogates=1000)
-    antes['clustering_corr'] = antes['clustering'] / (mean_clust_antes + 1e-12)
+        mean_clust_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "clustering", n_surrogates=1000)
+        antes['clustering_corr'] = antes['clustering'] / (mean_clust_antes + 1e-12)
 
-    mean_dist_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "mean_dist", n_surrogates=1000)
-    antes['mean_dist_corr'] = antes['mean_dist'] / (mean_dist_antes + 1e-12)
+        mean_dist_antes = compute_surrogate_metrics(antes['adjacency_matrix'], "mean_dist", n_surrogates=1000)
+        antes['mean_dist_corr'] = antes['mean_dist'] / (mean_dist_antes + 1e-12)
 
     # === Correção para a janela DURANTE ===
     print("\n=== PROCESSANDO JANELA 'DURANTE' ===")
@@ -111,9 +114,12 @@ def boundary_correction(region, cyclone):
 
 
     output_path = f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl"
-    with open(output_path, "wb") as f:
-        pickle.dump({'antes': antes, 'durante': durante}, f)
+    if "antes" in CYCLONES[cyclone]:    
+        with open(output_path, "wb") as f:
+            pickle.dump({'antes': antes, 'durante': durante}, f)
+    else:
+        with open(output_path, "wb") as f:
+            pickle.dump({'durante': durante}, f)
 
-    print(f"\nCorreção de boundary effects concluída!")
+
     print(f"Resultados salvos em: {output_path}")
-    print("   → Métricas corrigidas: degree_corr, clustering_corr, mean_dist_corr")
