@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 from math import radians, sin, cos, sqrt, atan2
+from dictionary import CYCLONES
+
 
 def calculate_mean_distance(region, cyclone):
 
@@ -10,13 +12,15 @@ def calculate_mean_distance(region, cyclone):
     with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "rb") as f:
         data = pickle.load(f)
 
-    antes   = data['antes']
+    if "antes" in CYCLONES[cyclone]:
+        antes   = data['antes']
     durante = data['durante']
 
-    lat = antes['lat_ocean']      
-    lon = antes['lon_ocean']
+    lat = durante['lat_ocean']      
+    lon = durante['lon_ocean']
 
-    adj_antes   = antes['adjacency_matrix']
+    if "antes" in CYCLONES[cyclone]:
+        adj_antes   = antes['adjacency_matrix']
     adj_durante = durante['adjacency_matrix']
 
     # ------------------------------------------------------------------
@@ -46,20 +50,21 @@ def calculate_mean_distance(region, cyclone):
             mean_dist[i] = np.mean(dists)
         return mean_dist
 
-    mean_dist_antes   = calc_mean_distance(adj_antes,   lat, lon)
+    if "antes" in CYCLONES[cyclone]:
+        mean_dist_antes   = calc_mean_distance(adj_antes,   lat, lon)
     mean_dist_durante = calc_mean_distance(adj_durante, lat, lon)
 
     # ------------------------------------------------------------------
     # 4. Salvar no pickle
     # ------------------------------------------------------------------
-    antes['mean_dist']   = mean_dist_antes
+    if "antes" in CYCLONES[cyclone]:
+        antes['mean_dist']   = mean_dist_antes
     durante['mean_dist'] = mean_dist_durante
 
-    with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
-        pickle.dump({'antes': antes, 'durante': durante}, f)
-
-    print("DISTÂNCIA GEOGRÁFICA MÉDIA CALCULADA COM SUCESSO!")
-    print(f"   • Distância média ANTES:   {np.nanmean(mean_dist_antes):.0f} km")
-    print(f"   • Distância média DURANTE: {np.nanmean(mean_dist_durante):.0f} km")
-    print(f"   • Mínimo/Máximo ANTES:     {np.nanmin(mean_dist_antes):.0f} / {np.nanmax(mean_dist_antes):.0f} km")
-    print(f"   • Mínimo/Máximo DURANTE:   {np.nanmin(mean_dist_durante):.0f} / {np.nanmax(mean_dist_durante):.0f} km")
+    if "antes" in CYCLONES[cyclone]:
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'antes': antes, 'durante': durante}, f)
+    else:
+        with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
+            pickle.dump({'durante': durante}, f)
+    
