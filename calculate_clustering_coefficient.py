@@ -42,6 +42,3 @@ def calculate_clustering(region, cyclone):
     else:
         with open(f"Metrics/{region}/{cyclone}/{cyclone}_metrics.pkl", "wb") as f:
             pickle.dump({'durante': durante}, f)
-
-
-    print("LOCAL CLUSTERING COEFFICIENT CALCULADO COM SUCESSO!")
