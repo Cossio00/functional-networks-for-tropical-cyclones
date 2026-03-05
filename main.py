@@ -10,17 +10,22 @@ import boundary_effects_correction as corr
 import plot as plt
 
 from dictionary import CYCLONES
+from dictionary_regions import REGIONS
 
-#   A partir deste código, todo o processo para a geração das métricas e plotagem é rodado. 
-#   Basta ajustar a região e o ciclone desejados. 
-REGION = "Bengal_Bay"
-CYCLONE = "Gaja"
+CYCLONE = "Irma"
 
 def main():
     if CYCLONE not in CYCLONES:
         print(f"Ciclone '{CYCLONE}' não encontrado no dicionário de ciclones.")
         print("Verifique o ciclone selecionado e tente novamente.")
         return
+    
+    REGION = CYCLONES[CYCLONE]["region"]
+    
+    if REGION not in REGIONS:
+        print(f"Região '{REGION}' não encontrada no dicionário de regiões.")
+        print(f"Verifique se a região do ciclone '{CYCLONE}' está presente no dicionário de regiões e tente novamente.")
+        return    
 
     cli.calculate_mean_climatology(REGION)
     ano.calculate_anomaly(REGION, CYCLONE)
@@ -35,3 +40,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
