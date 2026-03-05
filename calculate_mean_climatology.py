@@ -11,15 +11,13 @@ from datetime import datetime
 def calculate_mean_climatology(region):
     data_dir = f"Dataset/{region}/mslp"
     output_file = f"Metrics/{region}/climatology_1979_2018_daily.nc"
-    file_list = sorted(glob.glob(os.path.join(data_dir, "mslp_dias_*.nc")))
+    file_list = sorted(glob.glob(os.path.join(data_dir, "mslp_dia_*.nc")))
     print(f"Encontrados {len(file_list)} arquivos.")
 
     # ================================
     # PASSO 1: Acumular soma e contagem por (mês, dia)
     # ================================
-    sums = defaultdict(lambda: np.zeros((41, 68), dtype=np.float64))
-    counts = defaultdict(int)
-
+    
     # Pegar grade de um arquivo qualquer
     sample_ds = xr.open_dataset(file_list[0])
     lat = sample_ds['latitude'].values
@@ -27,6 +25,8 @@ def calculate_mean_climatology(region):
     n_lat, n_lon = len(lat), len(lon)
     sample_ds.close()
 
+    sums = defaultdict(lambda: np.zeros((n_lat, n_lon), dtype=np.float64))
+    counts = defaultdict(int)
     # ================================
     # PASSO 2: Processar cada arquivo e separar por dia do calendário
     # ================================
