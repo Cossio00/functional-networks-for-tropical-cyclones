@@ -84,8 +84,7 @@ def calculate_anomaly(region, cyclone):
                 'long_name': f'MSLP Anomaly - {period_name}',
                 'cyclone': cyclone,
                 'period': f"{start_date} to {end_date}",
-                'method': 'Daily climatology subtracted',
-                'reference': 'Gupta et al. (2021)'
+                'method': 'Daily climatology subtracted'
             }
         ).sortby('time')
         
@@ -96,13 +95,16 @@ def calculate_anomaly(region, cyclone):
         print(f"  Shape: {anomaly_da.shape}")
 
     # ================================
-    # EXECUTA PARA "ANTES" E "DURANTE"
+    # EXECUTA PARA "ANTES" (SE EXISTIR)
     # ================================
-    calculate_anomalies_for_period(
-        CYCLONES[cyclone]["antes"][0],
-        CYCLONES[cyclone]["antes"][1],
-        "before"
-    )
+    if "antes" in CYCLONES[cyclone]:
+        calculate_anomalies_for_period(
+            CYCLONES[cyclone]["antes"][0],
+            CYCLONES[cyclone]["antes"][1],
+            "before"
+        )
+    else:
+        print(f"\nCiclone {cyclone} não possui período 'antes'. Pulando...")
 
     calculate_anomalies_for_period(
         CYCLONES[cyclone]["durante"][0],
