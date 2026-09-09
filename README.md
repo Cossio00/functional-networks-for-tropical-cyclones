@@ -1,7 +1,7 @@
-# Code guide
+# README
 
-Abaixo está um resumo do que faz cada código:
-1. **_calculate_mean_climatology** - Calcula a climatologia média de MSLP (ou qualquer dataset)
+
+1. **_calculate_mean_climatology_** - Calcula a climatologia média de MSLP (ou qualquer dataset)
 
 2. **_calculate_anomaly_** - Calcula a anomalia de MSLP a partir da climatologia média (no caso ali somente para as datas
                             antes e durante Gaja)
@@ -18,5 +18,16 @@ Abaixo está um resumo do que faz cada código:
 
 8. **_calculate_clustering_coefficient_** - Calcula coeficiente de agrupamento e armazena em um arquivo pkl
 
-9. **_plot_** - Realiza a plotagem dos resultados.
+9. **_boundary_effects_correction_** - Aplica correção de efeitos de borda às métricas calculadas utilizando SERN
 
+10. **_plot_** - Realiza a plotagem dos resultados.
+
+
+## Regiões e Ciclones Avaliados:
+
+>Baía de Bengala:
+>>+ Ciclone Gaja (10/11/2018 a 19/11/2018)<br>
+>>+ Ciclone Luban (06/10/2018 a 15/10/2018)<br>
+>>+ Ciclone Titli (08/10/2018 a 12/10/2018)<br>
+>>+ Vardah (06/12/2016 a 13/12/2016)<br>
+>>+ Megh (05/11/2015 a 10/11/2015)

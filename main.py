@@ -1,42 +1,157 @@
-import calculate_mean_climatology as cli
-import calculate_anomaly as ano
-import apply_land_sea_mask as lsm
-import create_sliding_windows as sw
-import calculate_kendall as kendall
-import calculate_degree as degree
-import calculate_mean_geographical_distance as mean_dist
-import calculate_clustering_coefficient as clust
-import boundary_effects_correction as corr
-import plot as plt
+import sys
+import argparse
+from src.data import (request_mslp, request_landsea_mask)
+from src.processing import (calculate_mean_climatology, calculate_anomaly, apply_land_sea_mask, create_sliding_windows)
+from src.network import (calculate_kendall, calculate_degree, calculate_mean_distance, calculate_clustering)
+from src.correction import boundary_correction
+from src.visualization import plot
 
-from dictionary import CYCLONES
-from dictionary_regions import REGIONS
+from config import CYCLONES, REGIONS
 
-CYCLONE = "Irma"
-
-def main():
-    if CYCLONE not in CYCLONES:
-        print(f"Ciclone '{CYCLONE}' não encontrado no dicionário de ciclones.")
+def processing(cyclone):
+    if cyclone not in CYCLONES:
+        print(f"Ciclone '{cyclone}' não encontrado no dicionário de ciclones.")
         print("Verifique o ciclone selecionado e tente novamente.")
         return
     
-    REGION = CYCLONES[CYCLONE]["region"]
+    REGION = CYCLONES[cyclone]["region"]
     
     if REGION not in REGIONS:
         print(f"Região '{REGION}' não encontrada no dicionário de regiões.")
-        print(f"Verifique se a região do ciclone '{CYCLONE}' está presente no dicionário de regiões e tente novamente.")
-        return    
+        print(f"Verifique se a região do ciclone '{cyclone}' está presente no dicionário de regiões e tente novamente.")
+        return   
+    
+    calculate_mean_climatology(REGION)
+    calculate_anomaly(REGION, cyclone)
+    apply_land_sea_mask(REGION, cyclone)
+    create_sliding_windows(REGION, cyclone)
+    calculate_kendall(REGION, cyclone)
+    calculate_degree(REGION, cyclone)
+    calculate_mean_distance(REGION, cyclone)
+    calculate_clustering(REGION, cyclone)
+    boundary_correction(REGION, cyclone)
+    plot(REGION, cyclone)
 
-    cli.calculate_mean_climatology(REGION)
-    ano.calculate_anomaly(REGION, CYCLONE)
-    lsm.apply_land_sea_mask(REGION, CYCLONE)
-    sw.create_sliding_windows(REGION, CYCLONE)
-    kendall.calculate_kendall(REGION, CYCLONE)
-    degree.calculate_degree(REGION, CYCLONE)
-    mean_dist.calculate_mean_distance(REGION, CYCLONE)
-    clust.calculate_clustering(REGION, CYCLONE)
-    corr.boundary_correction(REGION, CYCLONE)
-    plt.plot(REGION, CYCLONE)
+
+def list_cyclones():
+
+    print("\nCiclones disponíveis:\n")
+
+    for cyclone, data in CYCLONES.items():
+
+        region = data["region"]
+        start = data["start"]
+        end = data["end"]
+
+        print(f"  {cyclone}")
+        print(f"    Região:  {region}")
+        print(f"    Período: {start} → {end}")
+        print()
+
+
+def main():
+
+    parser = argparse.ArgumentParser(
+        description=(
+            "Pipeline ERA5 e redes funcionais "
+            "para ciclones tropicais."
+        )
+    )
+
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=[
+            "processing",
+            "mslp",
+            "landsea",
+            "cyclones"
+        ],
+        help="Operação a ser executada."
+    )
+
+    parser.add_argument(
+        "cyclone",
+        nargs="?",
+        help="Nome do ciclone."
+    )
+
+    args = parser.parse_args()
+
+    # ========================================================
+    # Nenhum comando
+    # ========================================================
+
+    if args.command is None:
+
+        parser.print_help()
+
+        print("\nExemplos:")
+        print("  python main.py cyclones")
+        print("  python main.py processing CYCLONE_NAME")
+        print("  python main.py mslp CYCLONE_NAME")
+        print("  python main.py landsea CYCLONE_NAME")
+
+        return
+
+    # ========================================================
+    # LISTAR CICLONES
+    # ========================================================
+
+    if args.command == "cyclones":
+
+        list_cyclones()
+
+        return
+
+    # ========================================================
+    # COMANDOS QUE EXIGEM CICLONE
+    # ========================================================
+
+    if args.cyclone is None:
+
+        print(f"\nO comando '{args.command}' requer o nome de um ciclone.")
+        print("\nExemplo:")
+        print(f"  python main.py {args.command} Gaja")
+        print("\nUse:")
+        print("  python main.py cyclones")
+        print("para verificar os ciclones disponíveis.")
+
+        return
+
+    # ========================================================
+    # VERIFICAR CICLONE
+    # ========================================================
+
+    if args.cyclone not in CYCLONES:
+
+        print(f"\nCiclone '{args.cyclone}' não encontrado.")
+        print("\nCiclones disponíveis:")
+
+        for cyclone in CYCLONES:
+            print(f"  - {cyclone}")
+
+        return
+
+    region = CYCLONES[args.cyclone]["region"]
+
+    # ========================================================
+    # PROCESSING
+    # ========================================================
+
+    if args.command == "processing":
+
+        processing(args.cyclone)
+
+    elif args.command == "mslp":
+
+        request_mslp(region)
+
+
+    elif args.command == "landsea":
+
+        request_landsea_mask(region)
+
 
 if __name__ == "__main__":
     main()

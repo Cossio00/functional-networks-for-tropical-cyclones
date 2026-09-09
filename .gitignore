@@ -1,1 +1,6 @@
 spatial-effects-networks
+.env
+__pycache__/
+.vscode
+*.pkl
+*.nc
