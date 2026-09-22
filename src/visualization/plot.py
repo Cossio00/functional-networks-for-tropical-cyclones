@@ -7,19 +7,11 @@ from config import REGIONS
 from cyclones_tracks import CYCLONES_TRACKS
 
 
-# ============================================================
-# CONFIGURAÇÃO DOS PERCENTIS
-# ============================================================
-
 LOWER_PERCENTILE = 0.5
 UPPER_PERCENTILE = 99.5
 
 
 def plot(region, cyclone):
-
-    # ======================================================
-    # CARREGA INFORMAÇÕES DA REGIÃO
-    # ======================================================
 
     region_info = REGIONS[region]
 
@@ -43,24 +35,6 @@ def plot(region, cyclone):
         f"para o ciclone {cyclone}."
     )
 
-    # ======================================================
-    # CALCULA ESCALAS GLOBAIS DO CICLONE
-    # ======================================================
-    #
-    # A escala é calculada usando os valores de TODAS as
-    # janelas do ciclone.
-    #
-    # Exemplo:
-    #
-    #   Janela 1 ─┐
-    #   Janela 2 ─┤
-    #   Janela 3 ─┼──> P2 / P98
-    #   Janela 4 ─┤
-    #   Janela 5 ─┘
-    #
-    # Isso garante que todas as janelas possam ser comparadas
-    # visualmente.
-    # ======================================================
 
     def get_percentile_scale(metric_name):
 
@@ -76,7 +50,6 @@ def plot(region, cyclone):
                 dtype=float
             )
 
-            # Remove NaN e infinitos
             values = values[
                 np.isfinite(values)
             ]
@@ -87,10 +60,8 @@ def plot(region, cyclone):
         if not all_values:
             return 0, 1
 
-        # Junta os valores de todas as janelas
         all_values = np.concatenate(all_values)
 
-        # Calcula os percentis
         vmin = np.percentile(
             all_values,
             LOWER_PERCENTILE
@@ -101,7 +72,6 @@ def plot(region, cyclone):
             UPPER_PERCENTILE
         )
 
-        # Evita escala degenerada
         if vmin == vmax:
 
             return (
@@ -110,11 +80,7 @@ def plot(region, cyclone):
             )
 
         return vmin, vmax
-
-    # ======================================================
-    # ESCALA DE CADA MÉTRICA
-    # ======================================================
-
+    
     degree_scale = get_percentile_scale(
         "degree_corr"
     )
@@ -132,10 +98,6 @@ def plot(region, cyclone):
         mean_dist_scale,
         clustering_scale
     ]
-
-    # ======================================================
-    # MOSTRA AS ESCALAS CALCULADAS
-    # ======================================================
 
     print("\n" + "=" * 60)
     print("ESCALAS DAS MÉTRICAS")
@@ -197,10 +159,6 @@ def plot(region, cyclone):
             for i in intensities
         ]
 
-    # ======================================================
-    # FUNÇÃO PARA TRANSFORMAR VETOR 1D EM GRADE 2D
-    # ======================================================
-
     def vector_to_grid(values, ocean_mask):
 
         grid = np.full(
@@ -211,10 +169,6 @@ def plot(region, cyclone):
         grid[ocean_mask] = values
 
         return grid
-
-    # ======================================================
-    # FUNÇÃO PARA FORMATAR DATA
-    # ======================================================
 
     def format_date(date):
 
@@ -228,9 +182,6 @@ def plot(region, cyclone):
             f"{date_str[0:4]}"
         )
 
-    # ======================================================
-    # PASTA DE SAÍDA
-    # ======================================================
 
     output_dir = (
         f"Plots/{region}/{cyclone}"
@@ -241,9 +192,6 @@ def plot(region, cyclone):
         exist_ok=True
     )
 
-    # ======================================================
-    # PROCESSA CADA JANELA
-    # ======================================================
 
     for window_id, window in data.items():
 
@@ -251,15 +199,8 @@ def plot(region, cyclone):
             f"\nGerando plot para {window_id}..."
         )
 
-        # --------------------------------------------------
-        # Número da janela
-        # --------------------------------------------------
 
         window_number = window["window"]
-
-        # --------------------------------------------------
-        # Período da janela
-        # --------------------------------------------------
 
         start = format_date(
             window["start"]
@@ -271,10 +212,6 @@ def plot(region, cyclone):
 
         period = f"{start} a {end}"
 
-        # --------------------------------------------------
-        # Coordenadas
-        # --------------------------------------------------
-
         ocean_mask = window["ocean_mask"]
 
         lat = window["lat"]
@@ -284,10 +221,6 @@ def plot(region, cyclone):
             lon,
             lat
         )
-
-        # --------------------------------------------------
-        # MÉTRICAS
-        # --------------------------------------------------
 
         deg = vector_to_grid(
             window["degree_corr"],
@@ -319,10 +252,6 @@ def plot(region, cyclone):
             )
         ]
 
-        # ==================================================
-        # FIGURA
-        # ==================================================
-
         fig, axes = plt.subplots(
             1,
             3,
@@ -335,10 +264,6 @@ def plot(region, cyclone):
             fontsize=16,
             fontweight="bold"
         )
-
-        # ==================================================
-        # PLOTS
-        # ==================================================
 
         letters = [
             "(a)",
@@ -355,10 +280,6 @@ def plot(region, cyclone):
 
             ax = axes[col]
 
-            # --------------------------------------------------
-            # MAPA
-            # --------------------------------------------------
-
             im = ax.pcolormesh(
                 Lon_c,
                 Lat_c,
@@ -368,10 +289,6 @@ def plot(region, cyclone):
                 vmax=vmax,
                 shading="auto"
             )
-
-            # --------------------------------------------------
-            # LIMITES ESPACIAIS
-            # --------------------------------------------------
 
             ax.set_xlim(
                 lon_min,
@@ -383,26 +300,14 @@ def plot(region, cyclone):
                 lat_max
             )
 
-            # --------------------------------------------------
-            # FUNDO
-            # --------------------------------------------------
-
             ax.set_facecolor(
                 "gray"
             )
-
-            # --------------------------------------------------
-            # TÍTULO
-            # --------------------------------------------------
 
             ax.set_title(
                 title,
                 fontsize=11
             )
-
-            # --------------------------------------------------
-            # LETRA
-            # --------------------------------------------------
 
             ax.text(
                 -0.12,
@@ -414,10 +319,6 @@ def plot(region, cyclone):
                 va="top",
                 ha="right"
             )
-
-            # ==================================================
-            # TRAJETÓRIA DO CICLONE
-            # ==================================================
 
             if (
                 track_lons is not None
@@ -434,10 +335,6 @@ def plot(region, cyclone):
                     edgecolor="none"
                 )
 
-            # ==================================================
-            # COLORBAR
-            # ==================================================
-
             fig.colorbar(
                 im,
                 ax=ax,
@@ -445,10 +342,6 @@ def plot(region, cyclone):
                 fraction=0.046,
                 pad=0.08
             )
-
-        # ==================================================
-        # SALVAR
-        # ==================================================
 
         filename = (
             f"janela_{window_number:03d}.png"
@@ -471,10 +364,6 @@ def plot(region, cyclone):
         print(
             f"Plot salvo: {output_path}"
         )
-
-    # ======================================================
-    # FINAL
-    # ======================================================
 
     print(
         f"\nTodos os plots do ciclone {cyclone} "
