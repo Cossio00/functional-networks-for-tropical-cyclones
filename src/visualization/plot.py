@@ -155,7 +155,7 @@ def plot(region, cyclone):
         max_int = max(intensities)
 
         sizes = [
-            (i / max_int * 50) ** 1.2
+            (i / max_int * 35) ** 1.2
             for i in intensities
         ]
 
