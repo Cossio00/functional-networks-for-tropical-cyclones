@@ -318,8 +318,8 @@ M_{\mathrm{corr}} = \frac{M_{\mathrm{obs}}} {\langle M_{\mathrm{SERN}}\rangle}
 ```
 where:
 
-$$\M_{\mathrm{obs}}$$ is the metric calculated from the original functional network;
-$$\(\langle M_{\mathrm{SERN}}\rangle\)$$ is the mean metric obtained from the 1000 surrogate networks.
+$$M_{\mathrm{obs}}$$ is the metric calculated from the original functional network;
+$$\\langle M_{\mathrm{SERN}}\rangle\$$ is the mean metric obtained from the 1000 surrogate networks.
 
 The correction is applied independently to degree, mean geographical distance, and clustering coefficient.
 
