@@ -1,0 +1,11 @@
+numpy
+scipy
+pandas
+xarray
+netCDF4
+matplotlib
+networkx
+joblib
+tqdm
+cdsapi
+python-dotenv

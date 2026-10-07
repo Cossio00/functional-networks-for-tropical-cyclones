@@ -18,7 +18,7 @@ The pipeline processes ERA5 mean sea-level pressure (MSLP) data and integrates t
 - Correction of spatial boundary effects using Spatially Embedded Random Networks (SERN);
 - Generation of visualizations.
 
-Any temporal window contain 10 consecutive days of 3-hourly observations, resulting in 80 time steps per window. Consecutive windows are shifted by one day, allowing the evolution of the network structure to be analyzed throughout the cyclone period. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Any temporal window contain 10 consecutive days of 3-hourly observations, resulting in 80 time steps per window. Consecutive windows are shifted by one day, allowing the evolution of the network structure to be analyzed throughout the cyclone period.
 
 The project was developed to facilitate reproducible and systematic climate-network analyses and to allow the same computational workflow to be applied to different cyclones, regions, and time periods.
 
@@ -28,21 +28,30 @@ The methodology uses a spatial resolution of `0.75° × 0.75°` and considers on
 
 For each temporal window, statistically significant Kendall correlations (p ≤ 0.05) are considered, and the upper 5% of significant positive correlations are used to construct the adjacency matrix.
 
+### Installation
+
+Clone the repository and enter the project directory:
+
+```
+git clone https://github.com/Cossio00/functional-networks-for-tropical-cyclones.git
+cd functional-networks-for-tropical-cyclones
+```
+
 ### Project structure
 
 The project is organized into modules according to their role in the processing pipeline:
 
 | Module |	Description|
 | --- | ---|
-|`src/data`|	ERA5 and land-sea mask data acquisition|
-|`src/processing`	|Data preprocessing and temporal-window generation
-|`src/network`	|Functional-network construction and network metrics
-|`src/correction`	|Boundary-effect correction using SERN
-|`src/visualization`	|Generation of spatial network-metric plots
-|`config`	|Cyclone and region configuration
-|`Dataset/`	|Downloaded and processed input datasets
-|`Metrics/`	|Intermediate and final numerical results
-|`Plots/`	|Generated visualizations
+|`src/data`             |ERA5 and land-sea mask data acquisition|
+|`src/processing`	    |Data preprocessing and temporal-window generation|
+|`src/network`	        |Functional-network construction and network metrics|
+|`src/correction`	    |Boundary-effect correction using SERN|
+|`src/visualization`	|Generation of spatial network-metric plots|
+|`config`	            |Cyclone and region configuration|
+|`Dataset/`	            |Downloaded and processed input datasets|
+|`Metrics/`	            |Intermediate and final numerical results|
+|`Plots/`	            |Generated visualizations|
 
 ### Requirements
 
@@ -59,25 +68,38 @@ The main dependencies include:
 - joblib
 - tqdm
 - CDS API
+- python-dotenv
 
 
 Install the dependencies with:
 
-`pip install numpy scipy pandas xarray netCDF4 matplotlib networkx joblib tqdm cdsapi` !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-The exact dependency list can be moved to a requirements.txt file for easier installation. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
+```
+pip install -r requirements.txt
+```
 ### ERA5 API configuration
 
 The data acquisition modules use the Copernicus Climate Data Store (CDS) API.
 
-Before using the automatic data acquisition commands, configure your CDS API credentials according to the official CDS API documentation.
+Before using the automatic data acquisition commands, configure your CDS API
+credentials according to the official CDS API documentation.
 
-The project expects the credentials to be available to the CDS API client.
+Credentials can be provided in either of the following ways:
 
-Data acquisition can then be performed directly through the command-line interface.
+1. Through the standard CDS API configuration file (`~/.cdsapirc`), as described
+   in the official documentation.
 
+2. Through a `.env` file placed in the project root and loaded automatically
+   with `python-dotenv`, containing:
+
+```
+API_KEY= <your-api-key>
+```
+
+The project expects the credentials to be available to the CDS API client
+before any data acquisition command is executed.
+
+Data acquisition can then be performed directly through the command-line
+interface.
 
 ### Configuration
 
@@ -296,7 +318,7 @@ M_{\mathrm{corr}} = \frac{M_{\mathrm{obs}}} {\langle M_{\mathrm{SERN}}\rangle}
 ```
 where:
 
-$$\M_{\mathrm{obs}}\$$ is the metric calculated from the original functional network;
+$$\M_{\mathrm{obs}}$$ is the metric calculated from the original functional network;
 $$\(\langle M_{\mathrm{SERN}}\rangle\)$$ is the mean metric obtained from the 1000 surrogate networks.
 
 The correction is applied independently to degree, mean geographical distance, and clustering coefficient.
