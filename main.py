@@ -1,7 +1,6 @@
-import sys
 import argparse
 from src.data import (request_mslp, request_landsea_mask)
-from src.processing import (calculate_mean_climatology, calculate_anomaly, apply_land_sea_mask, create_sliding_windows)
+from src.processing import (calculate_mean_climatology, calculate_anomaly, apply_land_sea_mask, create_sliding_windows, calculate_network_statistics)
 from src.network import (calculate_kendall, calculate_degree, calculate_mean_distance, calculate_clustering)
 from src.correction import boundary_correction
 from src.visualization import plot
@@ -20,7 +19,7 @@ def processing(cyclone):
         print(f"Região '{REGION}' não encontrada no dicionário de regiões.")
         print(f"Verifique se a região do ciclone '{cyclone}' está presente no dicionário de regiões e tente novamente.")
         return   
-    
+
     calculate_mean_climatology(REGION)
     calculate_anomaly(REGION, cyclone)
     apply_land_sea_mask(REGION, cyclone)
@@ -30,6 +29,7 @@ def processing(cyclone):
     calculate_mean_distance(REGION, cyclone)
     calculate_clustering(REGION, cyclone)
     boundary_correction(REGION, cyclone)
+    calculate_network_statistics(REGION, cyclone)
     plot(REGION, cyclone)
 
 

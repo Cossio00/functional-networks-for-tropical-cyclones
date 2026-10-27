@@ -141,7 +141,7 @@ def plot(region, cyclone):
         cyclone,
         []
     )
-
+    
     track_lats = None
     track_lons = None
     sizes = None
@@ -171,17 +171,43 @@ def plot(region, cyclone):
         return grid
 
     def format_date(date):
-
         date = np.datetime64(date)
-
         date_str = str(date)[:10]
+        year, month, day = date_str.split("-")
+        
+        months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ]
+        
+        return f"{int(day)} {months[int(month)-1]} {year}"
 
-        return (
-            f"{date_str[8:10]}/"
-            f"{date_str[5:7]}/"
-            f"{date_str[0:4]}"
-        )
-
+    def format_period(start_date, end_date):
+        
+        start = np.datetime64(start_date)
+        end = np.datetime64(end_date)
+        
+        start_str = str(start)[:10]
+        end_str = str(end)[:10]
+        
+        s_year, s_month, s_day = start_str.split("-")
+        e_year, e_month, e_day = end_str.split("-")
+        
+        months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ]
+        
+        s_month_name = months[int(s_month)-1]
+        e_month_name = months[int(e_month)-1]
+        
+        if s_year == e_year and s_month == e_month:
+            return f"{int(s_day)} to {int(e_day)} {s_month_name} {s_year}"
+        
+        if s_year == e_year:
+            return f"{int(s_day)} {s_month_name} to {int(e_day)} {e_month_name} {s_year}"
+        
+        return f"{int(s_day)} {s_month_name} {s_year} to {int(e_day)} {e_month_name} {e_year}"
 
     output_dir = (
         f"Plots/{region}/{cyclone}"
@@ -202,15 +228,7 @@ def plot(region, cyclone):
 
         window_number = window["window"]
 
-        start = format_date(
-            window["start"]
-        )
-
-        end = format_date(
-            window["end"]
-        )
-
-        period = f"{start} a {end}"
+        period = format_period(window["start"], window["end"])
 
         ocean_mask = window["ocean_mask"]
 
@@ -260,7 +278,7 @@ def plot(region, cyclone):
         )
 
         fig.suptitle(
-            f"Janela {window_number} — {period}",
+            f"{period}",
             fontsize=16,
             fontweight="bold"
         )

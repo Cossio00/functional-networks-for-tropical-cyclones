@@ -69,6 +69,8 @@ The main dependencies include:
 - tqdm
 - CDS API
 - python-dotenv
+- streamlit
+- plotly
 
 
 Install the dependencies with:
@@ -217,7 +219,7 @@ The command displays the cyclone name, associated region, and configured process
 
 Once the required ERA5 data are available, the complete processing workflow can be executed with:
 
-`python main.py processing Gaja`
+`python main.py processing <cyclone>`
 
 The pipeline automatically determines the region associated with the selected cyclone. The user does not need to execute each processing module individually.
 
@@ -225,17 +227,23 @@ The pipeline automatically determines the region associated with the selected cy
 
 To request the ERA5 MSLP data associated with a configured cyclone:
 
-`python main.py mslp Gaja`
+`python main.py mslp <cyclone>`
 
-The pipeline uses the region associated with Gaja to determine the spatial domain of the request. The data are downloaded and stored under the corresponding region directory.
+The pipeline uses the region associated with the cyclone to determine the spatial domain of the request. The data are downloaded and stored under the corresponding region directory.
 
 ### Downloading the land-sea mask
 
 The land-sea mask can be obtained with:
 
-`python main.py landsea Gaja`
+`python main.py landsea <cyclone>`
 
 The region is automatically obtained from the cyclone configuration.
+
+### Generating metrics charts
+
+After processing, you can generate an interactive dashboard with the metrics generated from the events.
+
+`python -m streamlit run dashboard/app.py`
 
 ## Processing stages
 ### 1. Daily climatology

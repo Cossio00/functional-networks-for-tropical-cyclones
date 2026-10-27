@@ -9,3 +9,5 @@ joblib
 tqdm
 cdsapi
 python-dotenv
+streamlit
+plotly

@@ -2,3 +2,4 @@ from .calculate_mean_climatology import calculate_mean_climatology
 from .calculate_anomaly import calculate_anomaly
 from .apply_land_sea_mask import apply_land_sea_mask
 from .create_sliding_windows import create_sliding_windows
+from .calculate_network_statistics import calculate_network_statistics
